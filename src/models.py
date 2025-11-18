@@ -59,11 +59,13 @@ class Vehicle(db.Model):
     model: Mapped[str] = mapped_column(String(20), nullable=False)
     manufacturer: Mapped[str] = mapped_column(String(40), nullable=False)
 
-
+    users: Mapped[list["User"]] = relationship(
+        secondary="favorite_vehicles", back_populates="vehicles")
+    
+    
 # He creado tablas especificas para cada tipo de favorito
 # para que se relacionen de forma unica y pueda devolver quien da like y quien recibe.
 
- 
 class FavoriteCharacter(db.Model):
     __tablename__ = "favorite_characters"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -88,7 +90,7 @@ class FavoritePlanet(db.Model):
 
 
 class FavoriteVehicle(db.Model):
-    __tablename__ = "favorite_characters"
+    __tablename__ = "favorite_vehicles"
     id: Mapped[int] = mapped_column(primary_key=True)
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
