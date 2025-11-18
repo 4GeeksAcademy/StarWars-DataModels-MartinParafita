@@ -38,6 +38,14 @@ class Character(db.Model):
     users: Mapped[list["User"]] = relationship(
         secondary="favorite_characters", back_populates="characters")
 
+    def serialize(self):
+        return{
+            "id": self.id,
+            "name": self.name,
+            "gender": self.gender,
+            "hair_color": self.hair_color,
+            "eye_color": self.eye_color
+        }
 
 class Planet(db.Model):
     __tablename__ = "planets"
@@ -50,6 +58,14 @@ class Planet(db.Model):
     users: Mapped[list["User"]] = relationship(
         secondary="favorite_planets", back_populates="planets")
 
+    def serialize(self):
+        return{
+            "id": self.id,
+            "name": self.name,
+            "population": self.population,
+            "diameter": self.diameter,
+            "terrain": self.terrain
+        }
 
 class Vehicle(db.Model):
     __tablename__ = "vehicles"
@@ -62,7 +78,15 @@ class Vehicle(db.Model):
     users: Mapped[list["User"]] = relationship(
         secondary="favorite_vehicles", back_populates="vehicles")
     
-    
+    def serialize(self):
+        return{
+            "id": self.id,
+            "name": self.name,
+            "crew": self.crew,
+            "model": self.model,
+            "manufacturer": self.manufacturer
+        }
+
 # He creado tablas especificas para cada tipo de favorito
 # para que se relacionen de forma unica y pueda devolver quien da like y quien recibe.
 
