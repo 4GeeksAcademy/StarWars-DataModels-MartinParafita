@@ -17,6 +17,9 @@ class User(db.Model):
     planets: Mapped[list["Planet"]] = relationship(
         secondary="favorite_planets", back_populates="users"
     )
+    vehicles: Mapped[list["Vehicle"]] = relationship(
+        secondary="favorite_vehicles", back_populates="users"
+    )
 
     def serialize(self):
         return {
@@ -39,7 +42,6 @@ class Character(db.Model):
 class Planet(db.Model):
     __tablename__ = "planets"
     id: Mapped[int] = mapped_column(primary_key=True)
-    # ¡user_id ELIMINADO!
     name: Mapped[str] = mapped_column(String(40), nullable=False, unique=True)
     population: Mapped[int] = mapped_column(Integer, nullable=False)
     diameter: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -58,6 +60,10 @@ class Vehicle(db.Model):
     manufacturer: Mapped[str] = mapped_column(String(40), nullable=False)
 
 
+# He creado tablas especificas para cada tipo de favorito
+# para que se relacionen de forma unica y pueda devolver quien da like y quien recibe.
+
+ 
 class FavoriteCharacter(db.Model):
     __tablename__ = "favorite_characters"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -65,6 +71,7 @@ class FavoriteCharacter(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     character_id: Mapped[int] = mapped_column(ForeignKey("characters.id"))
 
+    # Ademas puede devolver el objeto completo.
     user: Mapped["User"] = relationship()
     character: Mapped["Character"] = relationship()
 
@@ -78,3 +85,14 @@ class FavoritePlanet(db.Model):
 
     user: Mapped["User"] = relationship()
     planet: Mapped["Planet"] = relationship()
+
+
+class FavoriteVehicle(db.Model):
+    __tablename__ = "favorite_characters"
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"))
+
+    user: Mapped["User"] = relationship()
+    vehicle: Mapped["Vehicle"] = relationship()
