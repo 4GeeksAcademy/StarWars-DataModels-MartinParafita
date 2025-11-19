@@ -7,18 +7,13 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(nullable=False)
-    is_active: Mapped[bool] = mapped_column(default=True)
-
-    characters: Mapped[list["Character"]] = relationship(
-        secondary="favorite_characters", back_populates="users"
-    )
-    planets: Mapped[list["Planet"]] = relationship(
-        secondary="favorite_planets", back_populates="users"
-    )
-    vehicles: Mapped[list["Vehicle"]] = relationship(
-        secondary="favorite_vehicles", back_populates="users"
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
+    password: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean(), nullable=False, default=True)
+    favorites: Mapped[list["Favorite"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
     )
 
     def serialize(self):
@@ -26,99 +21,67 @@ class User(db.Model):
             "id": self.id,
             "email": self.email,
         }
+    
+    @staticmethod
+    def all_users():
+        return User.query.all()
 
-class Character(db.Model):
-    __tablename__ = "characters"
+
+class People(db.Model):
+    __tablename__ = "people"
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(40), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    height: Mapped[str] = mapped_column(String(10), nullable=False)
     gender: Mapped[str] = mapped_column(String(10), nullable=False)
-    hair_color: Mapped[str] = mapped_column(String(10), nullable=False)
-    eye_color: Mapped[str] = mapped_column(String(10), nullable=False)
-
-    users: Mapped[list["User"]] = relationship(
-        secondary="favorite_characters", back_populates="characters")
 
     def serialize(self):
-        return{
+        return {
             "id": self.id,
             "name": self.name,
+            "height": self.height,
             "gender": self.gender,
-            "hair_color": self.hair_color,
-            "eye_color": self.eye_color
         }
+    
+    @staticmethod
+    def get_all_people():
+        return People.query.all()
 
 class Planet(db.Model):
     __tablename__ = "planets"
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(40), nullable=False, unique=True)
-    population: Mapped[int] = mapped_column(Integer, nullable=False)
-    diameter: Mapped[int] = mapped_column(Integer, nullable=False)
-    terrain: Mapped[str] = mapped_column(String(20), nullable=False)
+    name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    terrain: Mapped[str] = mapped_column(
+        String(120), unique=False, nullable=False)
+    population: Mapped[str] = mapped_column(
+        String(10), unique=False, nullable=False)
 
-    users: Mapped[list["User"]] = relationship(
-        secondary="favorite_planets", back_populates="planets")
-
-    def serialize(self):
-        return{
+    def to_dict(self):
+        return {
             "id": self.id,
             "name": self.name,
+            "terrain": self.terrain,
             "population": self.population,
-            "diameter": self.diameter,
-            "terrain": self.terrain
         }
-
-class Vehicle(db.Model):
-    __tablename__ = "vehicles"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(40), nullable=False, unique=True)
-    crew: Mapped[int] = mapped_column(Integer, nullable=False)
-    model: Mapped[str] = mapped_column(String(20), nullable=False)
-    manufacturer: Mapped[str] = mapped_column(String(40), nullable=False)
-
-    users: Mapped[list["User"]] = relationship(
-        secondary="favorite_vehicles", back_populates="vehicles")
     
+    @staticmethod
+    def all_planets():
+        return Planet.query.all()
+
+
+class Favorite(db.Model):
+    __tablename__ = "favorites"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(50), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), nullable=False, index=True)
+    user: Mapped[User] = relationship(back_populates="favorites")
+
     def serialize(self):
-        return{
+        return {
             "id": self.id,
             "name": self.name,
-            "crew": self.crew,
-            "model": self.model,
-            "manufacturer": self.manufacturer
+            "user_id": self.user_id,
         }
-
-# He creado tablas especificas para cada tipo de favorito
-# para que se relacionen de forma unica y pueda devolver quien da like y quien recibe.
-
-class FavoriteCharacter(db.Model):
-    __tablename__ = "favorite_characters"
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    character_id: Mapped[int] = mapped_column(ForeignKey("characters.id"))
-
-    # Ademas puede devolver el objeto completo.
-    user: Mapped["User"] = relationship()
-    character: Mapped["Character"] = relationship()
-
-
-class FavoritePlanet(db.Model):
-    __tablename__ = "favorite_planets"
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    planet_id: Mapped[int] = mapped_column(ForeignKey("planets.id"))
-
-    user: Mapped["User"] = relationship()
-    planet: Mapped["Planet"] = relationship()
-
-
-class FavoriteVehicle(db.Model):
-    __tablename__ = "favorite_vehicles"
-    id: Mapped[int] = mapped_column(primary_key=True)
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicles.id"))
-
-    user: Mapped["User"] = relationship()
-    vehicle: Mapped["Vehicle"] = relationship()
